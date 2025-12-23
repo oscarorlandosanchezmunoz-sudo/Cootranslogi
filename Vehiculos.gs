@@ -142,37 +142,3 @@ function getVehiculosReporte(filtros) {
     return { status: 'error', message: 'Error de servidor: ' + e.message };
   }
 }
-
-function generarExcelVehiculos(datos) {
-  try {
-    const anio = new Date().getFullYear();
-    const mes = new Date().getMonth() + 1;
-    const dia = new Date().getDate();
-    const nombreArchivo = 'Informe_Vehiculos_' + anio + '-' + mes + '-' + dia;
-    const hojaTemporal = SpreadsheetApp.create(nombreArchivo);
-    const hoja = hojaTemporal.getSheets()[0];
-    hoja.getRange(1, 1, datos.length, datos[0].length).setValues(datos);
-    const url = hojaTemporal.getUrl();
-    const id = hojaTemporal.getId();
-    const urlDescarga = url.replace("/edit", "/export?format=xlsx");
-    ScriptApp.newTrigger('borrarHojaTemporal').timeBased().after(10 * 60 * 1000).create();
-    PropertiesService.getScriptProperties().setProperty('archivoTemporalID', id);
-    return { status: 'success', url: urlDescarga };
-  } catch (e) {
-    Logger.log(e);
-    return { status: 'error', message: 'Error al crear el archivo: ' + e.message };
-  }
-}
-
-function borrarHojaTemporal() {
-  try {
-    const id = PropertiesService.getScriptProperties().getProperty('archivoTemporalID');
-    if (id) {
-      const archivo = DriveApp.getFileById(id);
-      archivo.setTrashed(true);
-      PropertiesService.getScriptProperties().deleteProperty('archivoTemporalID');
-    }
-  } catch (e) {
-    Logger.log('Error al borrar archivo temporal: ' + e.message);
-  }
-}
